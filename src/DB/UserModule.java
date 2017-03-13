@@ -173,6 +173,8 @@ public class UserModule {
                         seatReservations
                 );
 
+                screenings.add(screening);
+
                 System.out.println(screening);
             }
 
