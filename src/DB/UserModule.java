@@ -1,6 +1,6 @@
 package DB;
 
-import com.sun.istack.internal.Nullable;
+import java.sql.*;
 
 /**
  * Created by Nadim Dahdouli on 2017-03-13.
@@ -15,8 +15,11 @@ public class UserModule {
 
     }
 
-    public void search(String s) {
-        
+    public void search(String term) {
+
+
+
+
     }
 
 
