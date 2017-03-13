@@ -16,7 +16,7 @@ public class UserModule {
     PreparedStatement stmt;
 
     public UserModule() {
-        conn = new ConnectionHandler("localhost", "biograf", "root", "").getConn();
+        conn = new ConnectionHandler("nadimdahdouli.me", "biograf", "biograf", "biograf").getConn();
     }
 
     /**
