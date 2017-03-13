@@ -19,4 +19,15 @@ public class Movie {
         this.runtime = runtime;
         this.agelimit = agelimit;
     }
+
+    @Override
+    public String toString() {
+        return "Movie{" +
+                "ID=" + ID +
+                ", title='" + title + '\'' +
+                ", price=" + price +
+                ", runtime=" + runtime +
+                ", agelimit=" + agelimit +
+                '}';
+    }
 }

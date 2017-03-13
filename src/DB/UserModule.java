@@ -2,6 +2,8 @@ package db;
 
 import models.Movie;
 import models.Screening;
+import models.Seat;
+import models.Theater;
 
 import java.sql.*;
 import java.util.*;
@@ -109,7 +111,7 @@ public class UserModule {
 
         String sql = "SELECT screening.*, " +
                 "movie.title, movie.price, movie.runtime, movie.agelimit, " +
-                "theater.name, theater.seats " +
+                "theater.name AS theaterName, theater.seats AS theaterSeats " +
                 "FROM screening " +
                 "JOIN movie ON screening.movie_id=movie.ID " +
                 "JOIN theater ON screening.theater_id=theater.ID " +
@@ -123,6 +125,8 @@ public class UserModule {
             ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {
+                int screening_id = rs.getInt("ID");
+                Timestamp screening_timestamp = rs.getTimestamp("timestamp");
 
                 Movie movie = new Movie(
                         rs.getInt("movie_id"),
@@ -132,7 +136,44 @@ public class UserModule {
                         rs.getInt("agelimit")
                 );
 
-                System.out.println(rs.getInt(1));
+                Theater theater = new Theater(
+                        rs.getInt("theater_id"),
+                        rs.getString("theaterName"),
+                        rs.getInt("theaterSeats"),
+                        null
+                );
+
+
+                sql = "SELECT seat_reservation.seat_id, " +
+                        "seat.row, seat.number " +
+                        "FROM `seat_reservation` " +
+                        "JOIN seat ON seat_reservation.seat_id=seat.ID " +
+                        "WHERE `screening_id` = ?";
+
+                stmt = conn.prepareStatement(sql);
+                stmt.setInt(1, screening_id);
+
+                ResultSet rsSeatReservations = stmt.executeQuery();
+
+                List<Seat> seatReservations = new ArrayList<>();
+                while (rsSeatReservations.next()) {
+                    seatReservations.add(new Seat(
+                            rsSeatReservations.getInt("seat_id"),
+                            rsSeatReservations.getInt("row"),
+                            rsSeatReservations.getInt("number")
+                    ));
+                }
+
+
+                Screening screening = new Screening(
+                        screening_id,
+                        screening_timestamp,
+                        movie,
+                        theater,
+                        seatReservations
+                );
+
+                System.out.println(screening);
             }
 
 

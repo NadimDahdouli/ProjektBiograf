@@ -13,4 +13,24 @@ public class Theater {
 
     private List<Seat> seats;
 
+    public Theater(int ID, String name, int nbrSeats, List<Seat> seats) {
+        this.ID = ID;
+        this.name = name;
+        this.nbrSeats = nbrSeats;
+        this.seats = seats;
+    }
+
+    public int getNbrSeats() {
+        return nbrSeats;
+    }
+
+    @Override
+    public String toString() {
+        return "Theater{" +
+                "ID=" + ID +
+                ", name='" + name + '\'' +
+                ", nbrSeats=" + nbrSeats +
+                ", seats=" + seats +
+                '}';
+    }
 }
