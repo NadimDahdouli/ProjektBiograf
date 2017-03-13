@@ -9,6 +9,13 @@ public class Seat {
     private int row;
     private int number;
 
+    /**
+     * Represents a seat in a theater
+     *
+     * @param ID     seat ID
+     * @param row    seat row
+     * @param number seat number
+     */
     public Seat(int ID, int row, int number) {
         this.ID = ID;
         this.row = row;

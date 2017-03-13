@@ -12,6 +12,15 @@ public class Movie {
     int agelimit;
 
 
+    /**
+     * Represents a movie
+     *
+     * @param ID       movie ID
+     * @param title    movie title
+     * @param price    movie price
+     * @param runtime  runtime in minutes
+     * @param agelimit age limit for the movie
+     */
     public Movie(int ID, String title, int price, int runtime, int agelimit) {
         this.ID = ID;
         this.title = title;

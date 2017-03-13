@@ -17,6 +17,15 @@ public class Screening {
     private int availableSeats;
     private List<Seat> seatReservations;
 
+    /**
+     * Represents a cinema screening
+     *
+     * @param ID               screening ID
+     * @param timestamp        timestamp for the screening
+     * @param movie            the movie
+     * @param theater          the theater this screening is available at
+     * @param seatReservations list of reserved seats for this screening
+     */
     public Screening(int ID, Timestamp timestamp, Movie movie, Theater theater, List<Seat> seatReservations) {
         this.ID = ID;
         this.timestamp = timestamp;

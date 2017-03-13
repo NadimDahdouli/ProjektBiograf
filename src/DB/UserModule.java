@@ -10,7 +10,8 @@ import java.util.*;
 import java.util.Date;
 
 /**
- * Created by Nadim Dahdouli on 2017-03-13.
+ * @author Nadim Dahdouli
+ * @author Johan Held
  */
 public class UserModule {
 
@@ -25,7 +26,7 @@ public class UserModule {
      * Searches the database for movies containing the search term
      *
      * @param term Search term
-     * @return List of movies or empty List
+     * @return list of movies or empty list if the result is null
      */
     public List<Movie> search(String term) {
 
@@ -96,6 +97,11 @@ public class UserModule {
 
     }
 
+    /**
+     * Cinema schedule from today's date to a week ahead. The returned result is a list of {@link Screening}s which contains all the relevant information such as screening time, {@link Movie} info, {@link Theater} and available {@link Seat}s
+     *
+     * @return list of screenings
+     */
     public List<Screening> getSchedule() {
         List<Screening> screenings = new ArrayList<>();
 

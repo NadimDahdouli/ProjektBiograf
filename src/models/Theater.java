@@ -13,6 +13,14 @@ public class Theater {
 
     private List<Seat> seats;
 
+    /**
+     * Represents a theater at a cinema
+     *
+     * @param ID       theater ID
+     * @param name     human readable name for the theater
+     * @param nbrSeats total number of seats in this theater
+     * @param seats    list of seats for this theater
+     */
     public Theater(int ID, String name, int nbrSeats, List<Seat> seats) {
         this.ID = ID;
         this.name = name;
@@ -20,6 +28,11 @@ public class Theater {
         this.seats = seats;
     }
 
+    /**
+     * The total number of seats in this theater
+     *
+     * @return number of seats
+     */
     public int getNbrSeats() {
         return nbrSeats;
     }
