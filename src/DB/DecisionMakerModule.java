@@ -1,20 +1,13 @@
 package db;
 
-import jdk.nashorn.internal.runtime.ECMAException;
 import models.Movie;
 import models.Screening;
-import models.Theater;
 import models.User;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
 
 /**
- * Created by Nadim Dahdouli on 2017-03-13.
+ * @author Nadim Dahdouli
  */
 @SuppressWarnings("Duplicates")
 public class DecisionMakerModule extends UserModule {
@@ -23,8 +16,6 @@ public class DecisionMakerModule extends UserModule {
     public boolean registerUser(User user) {
 
         // FIXME: Hash password
-        // FIXME: Check if current user is admin
-
 
         String sql = "INSERT INTO user (username, password, admin) VALUES(?, ?, ?)";
 
@@ -46,8 +37,6 @@ public class DecisionMakerModule extends UserModule {
     }
 
     public boolean editUser(User user) {
-
-        // FIXME: Check if current user is admin
 
         String sql = "UPDATE user SET username=?, password=?, admin=? WHERE ID=?";
 
@@ -71,8 +60,6 @@ public class DecisionMakerModule extends UserModule {
     }
 
     public boolean deleteUser(int ID) {
-
-        // FIXME: Check if current user is admin
 
         String sql = "DELETE FROM user WHERE ID=?";
 
@@ -158,6 +145,7 @@ public class DecisionMakerModule extends UserModule {
 
 
     public boolean addScreenings(List<Screening> screenings) {
+
         try {
             String sql = "INSERT INTO screening (timestamp, theater_id, movie_id) VALUES(?, ?, ?)";
             stmt = conn.prepareStatement(sql);

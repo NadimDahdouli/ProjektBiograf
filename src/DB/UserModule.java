@@ -1,9 +1,7 @@
 package db;
 
-import models.Movie;
-import models.Screening;
-import models.Seat;
-import models.Theater;
+import jdk.nashorn.internal.runtime.ECMAException;
+import models.*;
 
 import java.sql.*;
 import java.util.*;
@@ -13,6 +11,7 @@ import java.util.Date;
  * @author Nadim Dahdouli
  * @author Johan Held
  */
+@SuppressWarnings("Duplicates")
 public class UserModule {
 
     protected Connection conn;
@@ -95,6 +94,37 @@ public class UserModule {
 
         return movie;
 
+    }
+
+    public List<Screening> getScreenings(Movie movie) {
+        List<Screening> screenings = new ArrayList<>();
+
+        String sql = "SELECT ID, timestamp, theater_id FROM screening WHERE movie_id=?";
+
+        try {
+
+            stmt = conn.prepareStatement(sql);
+
+            stmt.setInt(1, movie.getID());
+
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                screenings.add(new Screening(
+                        rs.getInt("ID"),
+                        rs.getTimestamp("timestamp"),
+                        movie,
+                        getTheater(rs.getInt("theater_id")),
+                        getSeatsForScreening(rs.getInt("ID"))
+                ));
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+
+        return screenings;
     }
 
     /**
@@ -196,7 +226,12 @@ public class UserModule {
     public Theater getTheater(int ID) {
         Theater theater = null;
 
-        String sql = "SELECT * FROM theater WHERE ID=?";
+        String sql = "SELECT " +
+                "theater.name, COUNT(seat.ID) as seats " +
+                "FROM theater " +
+                "JOIN theater_seats ON theater.ID = theater_seats.theater_id " +
+                "JOIN seat ON theater_seats.seat_id = seat.ID " +
+                "WHERE theater.ID=?";
 
         try {
 
@@ -208,10 +243,10 @@ public class UserModule {
 
             if (rs.first()) {
                 theater = new Theater(
-                        rs.getInt("ID"),
+                        ID,
                         rs.getString("name"),
                         rs.getInt("seats"),
-                        null
+                        getSeatsForTheater(ID)
                 );
             }
 
@@ -224,8 +259,81 @@ public class UserModule {
         return theater;
     }
 
+    private List<Seat> getSeatsForScreening(int screening_id) {
+        List<Seat> seats = new ArrayList<>();
+
+        String sql = "SELECT " +
+                "seat.ID, seat.row, seat.number " +
+                "FROM seat_reservation " +
+                "JOIN seat ON seat_reservation.seat_id = seat.ID " +
+                "WHERE seat_reservation.screening_id = ?";
+
+        try {
+
+            stmt = conn.prepareStatement(sql);
+
+            stmt.setInt(1, screening_id);
+
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                seats.add(new Seat(
+                        rs.getInt("ID"),
+                        rs.getInt("row"),
+                        rs.getInt("number")
+                ));
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return seats;
+    }
+
+    private List<Seat> getSeatsForTheater(int theaterID) {
+        List<Seat> seats = new ArrayList<>();
+
+
+        String sql = "SELECT " +
+                "seat.ID, seat.row, seat.number " +
+                "FROM theater " +
+                "JOIN theater_seats ON theater.ID = theater_seats.theater_id " +
+                "JOIN seat ON theater_seats.seat_id = seat.ID " +
+                "WHERE theater.ID = ?";
+
+        try {
+
+            stmt = conn.prepareStatement(sql);
+
+            stmt.setInt(1, theaterID);
+
+
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                seats.add(new Seat(
+                        rs.getInt("ID"),
+                        rs.getInt("row"),
+                        rs.getInt("number")
+                ));
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return seats;
+    }
+
+    public boolean addCustomer(Customer customer){
+        return false;
+    }
+
     public static void main(String[] args) {
-        new UserModule().getSchedule();
+        UserModule userModule = new UserModule();
+
+        System.out.println(userModule.getScreenings(userModule.getMovie(1)));
     }
 
 }

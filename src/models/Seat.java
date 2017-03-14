@@ -22,6 +22,18 @@ public class Seat {
         this.number = number;
     }
 
+    public int getID() {
+        return ID;
+    }
+
+    public int getRow() {
+        return row;
+    }
+
+    public int getNumber() {
+        return number;
+    }
+
     @Override
     public String toString() {
         return "Seat{" +
