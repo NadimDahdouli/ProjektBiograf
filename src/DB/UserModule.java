@@ -1,6 +1,5 @@
 package db;
 
-import jdk.nashorn.internal.runtime.ECMAException;
 import models.*;
 
 import java.sql.*;
@@ -11,7 +10,6 @@ import java.util.Date;
  * @author Nadim Dahdouli
  * @author Johan Held
  */
-@SuppressWarnings("Duplicates")
 public class UserModule {
 
     protected Connection conn;
@@ -94,37 +92,6 @@ public class UserModule {
 
         return movie;
 
-    }
-
-    public List<Screening> getScreenings(Movie movie) {
-        List<Screening> screenings = new ArrayList<>();
-
-        String sql = "SELECT ID, timestamp, theater_id FROM screening WHERE movie_id=?";
-
-        try {
-
-            stmt = conn.prepareStatement(sql);
-
-            stmt.setInt(1, movie.getID());
-
-            ResultSet rs = stmt.executeQuery();
-
-            while (rs.next()) {
-                screenings.add(new Screening(
-                        rs.getInt("ID"),
-                        rs.getTimestamp("timestamp"),
-                        movie,
-                        getTheater(rs.getInt("theater_id")),
-                        getSeatsForScreening(rs.getInt("ID"))
-                ));
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-
-        return screenings;
     }
 
     /**
@@ -227,12 +194,7 @@ public class UserModule {
     public Theater getTheater(int ID) {
         Theater theater = null;
 
-        String sql = "SELECT " +
-                "theater.name, COUNT(seat.ID) as seats " +
-                "FROM theater " +
-                "JOIN theater_seats ON theater.ID = theater_seats.theater_id " +
-                "JOIN seat ON theater_seats.seat_id = seat.ID " +
-                "WHERE theater.ID=?";
+        String sql = "SELECT * FROM theater WHERE ID=?";
 
         try {
             stmt = conn.prepareStatement(sql);
@@ -243,10 +205,10 @@ public class UserModule {
 
             if (rs.first()) {
                 theater = new Theater(
-                        ID,
+                        rs.getInt("ID"),
                         rs.getString("name"),
                         rs.getInt("seats"),
-                        getSeatsForTheater(ID)
+                        null
                 );
             }
 
@@ -258,6 +220,7 @@ public class UserModule {
 
         return theater;
     }
+
 
     private List<Seat> getSeatsForScreening(int screening_id) {
         List<Seat> seats = new ArrayList<>();
@@ -381,13 +344,6 @@ public class UserModule {
         }
 
         return false;
-    }
-
-
-    public static void main(String[] args) {
-        UserModule userModule = new UserModule();
-
-        System.out.println(userModule.getScreenings(userModule.getMovie(1)));
     }
 
 }
