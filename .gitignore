@@ -61,10 +61,4 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
-.idea/compiler.xml
-.idea/misc.xml
-.idea/vcs.xml
-.idea/modules.xml
-.idea/copyright/profiles_settings.xml
-.idea/workspace.xml
-.idea/workspace.xml___jb_tmp___
+.idea/
