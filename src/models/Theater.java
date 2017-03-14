@@ -37,6 +37,18 @@ public class Theater {
         return nbrSeats;
     }
 
+    public int getID() {
+        return ID;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public List<Seat> getSeats() {
+        return seats;
+    }
+
     @Override
     public String toString() {
         return "Theater{" +

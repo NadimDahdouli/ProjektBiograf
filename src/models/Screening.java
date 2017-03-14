@@ -27,12 +27,32 @@ public class Screening {
      * @param seatReservations list of reserved seats for this screening
      */
     public Screening(int ID, Timestamp timestamp, Movie movie, Theater theater, List<Seat> seatReservations) {
+        this(timestamp, movie, theater, seatReservations);
+        this.ID = ID;
+    }
+
+    public Screening(Timestamp timestamp, Movie movie, Theater theater, List<Seat> seatReservations) {
         this.ID = ID;
         this.timestamp = timestamp;
         this.movie = movie;
         this.theater = theater;
         this.seatReservations = seatReservations;
-        this.availableSeats = theater.getNbrSeats() - seatReservations.size();
+        if (seatReservations != null)
+            this.availableSeats = theater.getNbrSeats() - seatReservations.size();
+        else
+            this.availableSeats = theater.getNbrSeats();
+    }
+
+    public Timestamp getTimestamp() {
+        return timestamp;
+    }
+
+    public Movie getMovie() {
+        return movie;
+    }
+
+    public Theater getTheater() {
+        return theater;
     }
 
     @Override

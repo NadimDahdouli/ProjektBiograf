@@ -15,8 +15,8 @@ import java.util.Date;
  */
 public class UserModule {
 
-    Connection conn;
-    PreparedStatement stmt;
+    protected Connection conn;
+    protected PreparedStatement stmt;
 
     public UserModule() {
         conn = new ConnectionHandler("nadimdahdouli.me", "biograf", "biograf", "biograf").getConn();
@@ -191,6 +191,37 @@ public class UserModule {
 
 
         return screenings;
+    }
+
+    public Theater getTheater(int ID) {
+        Theater theater = null;
+
+        String sql = "SELECT * FROM theater WHERE ID=?";
+
+        try {
+
+            stmt = conn.prepareStatement(sql);
+
+            stmt.setInt(1, ID);
+
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.first()) {
+                theater = new Theater(
+                        rs.getInt("ID"),
+                        rs.getString("name"),
+                        rs.getInt("seats"),
+                        null
+                );
+            }
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+
+        return theater;
     }
 
     public static void main(String[] args) {
