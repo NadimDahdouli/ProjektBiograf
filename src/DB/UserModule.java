@@ -293,7 +293,7 @@ public class UserModule {
         return seats;
     }
 
-    private List<Seat> getSeatsForTheater(int theaterID) {
+    private List<Seat> getSeatsForTheater(int theater_id) {
         List<Seat> seats = new ArrayList<>();
 
 
@@ -307,7 +307,7 @@ public class UserModule {
         try {
             stmt = conn.prepareStatement(sql);
 
-            stmt.setInt(1, theaterID);
+            stmt.setInt(1, theater_id);
 
             ResultSet rs = stmt.executeQuery();
 
