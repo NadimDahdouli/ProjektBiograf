@@ -135,31 +135,35 @@ public class UserModule {
      * @return list of screenings
      */
     public List<Screening> getSchedule() {
-        // FIXME: Shorten method by using extracted methods for movie, theater and seat reservations
         List<Screening> screenings = new ArrayList<>();
 
-        java.util.Date dtToday = new java.util.Date();
-        java.util.Date dtFuture;
-
+        Timestamp now;
         GregorianCalendar calendar = new GregorianCalendar();
-        calendar.setTime(dtToday);
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        now = new Timestamp(calendar.getTimeInMillis());
+
+        Timestamp future;
+        calendar = new GregorianCalendar();
         calendar.add(Calendar.DATE, 7);
+        calendar.set(Calendar.HOUR_OF_DAY, 23);
+        calendar.set(Calendar.MINUTE, 59);
 
-        dtFuture = new Date(calendar.getTime().getTime());
+
+        future = new Timestamp(calendar.getTimeInMillis());
 
 
-        String sql = "SELECT screening.*, " +
-                "movie.title, movie.price, movie.runtime, movie.agelimit, " +
-                "theater.name AS theaterName, theater.seats AS theaterSeats " +
+        String sql = "SELECT screening.* " +
                 "FROM screening " +
                 "JOIN movie ON screening.movie_id=movie.ID " +
                 "JOIN theater ON screening.theater_id=theater.ID " +
-                "WHERE UNIX_TIMESTAMP(screening.timestamp) >= ? AND UNIX_TIMESTAMP(screening.timestamp) <= ?";
+                "WHERE screening.timestamp >= ? AND screening.timestamp <= ? " +
+                "ORDER BY screening.timestamp ASC";
 
         try {
             PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setLong(1, dtToday.getTime() / 1000);
-            stmt.setLong(2, dtFuture.getTime() / 1000);
+            stmt.setTimestamp(1, now);
+            stmt.setTimestamp(2, future);
 
             ResultSet rs = stmt.executeQuery();
 
@@ -167,41 +171,9 @@ public class UserModule {
                 int screening_id = rs.getInt("ID");
                 Timestamp screening_timestamp = rs.getTimestamp("timestamp");
 
-                Movie movie = new Movie(
-                        rs.getInt("movie_id"),
-                        rs.getString("title"),
-                        rs.getInt("price"),
-                        rs.getInt("runtime"),
-                        rs.getInt("agelimit")
-                );
+                Movie movie = getMovie(rs.getInt("movie_id"));
 
-                Theater theater = new Theater(
-                        rs.getInt("theater_id"),
-                        rs.getString("theaterName"),
-                        rs.getInt("theaterSeats"),
-                        null
-                );
-
-
-                sql = "SELECT seat_reservation.seat_id, " +
-                        "seat.row, seat.number " +
-                        "FROM `seat_reservation` " +
-                        "JOIN seat ON seat_reservation.seat_id=seat.ID " +
-                        "WHERE `screening_id` = ?";
-
-                stmt = conn.prepareStatement(sql);
-                stmt.setInt(1, screening_id);
-
-                ResultSet rsSeatReservations = stmt.executeQuery();
-
-                List<Seat> seatReservations = new ArrayList<>();
-                while (rsSeatReservations.next()) {
-                    seatReservations.add(new Seat(
-                            rsSeatReservations.getInt("seat_id"),
-                            rsSeatReservations.getInt("row"),
-                            rsSeatReservations.getInt("number")
-                    ));
-                }
+                Theater theater = getTheater(rs.getInt("theater_id"));
 
 
                 Screening screening = new Screening(
@@ -209,19 +181,18 @@ public class UserModule {
                         screening_timestamp,
                         movie,
                         theater,
-                        seatReservations
+                        getSeatsForScreening(screening_id)
                 );
 
                 screenings.add(screening);
 
-                System.out.println(screening);
+                System.out.println(screening + "\n");
             }
 
 
         } catch (Exception e) {
             e.printStackTrace();
         }
-
 
         return screenings;
     }
@@ -245,7 +216,7 @@ public class UserModule {
 
             if (rs.first()) {
                 theater = new Theater(
-                        rs.getInt("ID"),
+                        ID,
                         rs.getString("name"),
                         rs.getInt("seats"),
                         getSeatsForTheater(ID)
@@ -454,5 +425,11 @@ public class UserModule {
                 return false;
 
         return true;
+    }
+
+    public static void main(String[] args) {
+        UserModule userModule = new UserModule();
+
+        userModule.getSchedule();
     }
 }
