@@ -2,9 +2,12 @@ package db;
 
 import models.*;
 
+import javax.xml.transform.Result;
 import java.sql.*;
 import java.util.*;
 import java.util.Date;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author Nadim Dahdouli
@@ -324,6 +327,8 @@ public class UserModule {
     }
 
     public boolean addCustomer(Customer customer) {
+        if (!approveCustomerData(customer))
+            return false;
 
         String sql = "INSERT INTO customer (email, firstname, phonenumber, debitcard) VALUES(?, ?, ?, ?)";
 
@@ -383,4 +388,55 @@ public class UserModule {
         return false;
     }
 
+    public Customer getCustomer(String email) {
+        String sql = "SELECT * FROM customer WHERE email=?";
+
+        try {
+            stmt = conn.prepareStatement(sql);
+
+            stmt.setString(1, email);
+
+            ResultSet rs = stmt.executeQuery();
+            if (rs.first())
+                return new Customer(rs.getInt("ID"),
+                        rs.getString("email"),
+                        rs.getString("firstname"),
+                        rs.getString("phonenumber"),
+                        rs.getString("debitcard"));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    public boolean approveCustomerData(Customer customer) {
+        if (customer.getEmail() == null)
+            return false;
+
+        String regex = "^[\\w!#$%&'*+/=?`{|}~^-]+(?:\\.[\\w!#$%&'*+/=?`{|}~^-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,6}$";
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(customer.getEmail());
+        if (!matcher.matches())
+            return false;
+
+        if (customer.getFirstname() == null || customer.getFirstname().length() < 2)
+            return false;
+
+        if (customer.getPhonenumber() == null || customer.getPhonenumber().length() < 5)
+            return false;
+
+        if (customer.getDebitcard() == null || customer.getDebitcard().length() < 5)
+            return false;
+
+        for (char c : customer.getPhonenumber().toCharArray())
+            if (c < '0' || c > '9')
+                return false;
+
+        for (char c : customer.getDebitcard().toCharArray())
+            if (c < '0' || c > '9')
+                return false;
+
+        return true;
+    }
 }
