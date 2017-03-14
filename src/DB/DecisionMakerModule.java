@@ -4,6 +4,7 @@ import models.Movie;
 import models.Screening;
 import models.User;
 
+import java.sql.ResultSet;
 import java.util.List;
 
 /**
