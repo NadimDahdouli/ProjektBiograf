@@ -25,6 +25,8 @@ public class DecisionMakerModule extends UserModule {
         // FIXME: Hash password
         // FIXME: Check if current user is admin
 
+        if (!approveUsername(user.getUsername()) || !approvePassword(user.getPassword()))
+            return false;
 
         String sql = "INSERT INTO user (username, password, admin) VALUES(?, ?, ?)";
 
@@ -89,6 +91,30 @@ public class DecisionMakerModule extends UserModule {
         }
 
         return false;
+    }
+
+    public User getUser(String username) {
+        String sql = "SELECT * FROM user WHERE username=?";
+
+        try {
+
+            stmt = conn.prepareStatement(sql);
+
+            stmt.setString(1, username);
+
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.first())
+                return new User(rs.getInt("ID"),
+                        rs.getString("username"),
+                        rs.getString("password"),
+                        rs.getString("admin").equals("admin"));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
     }
 
     public boolean addMovie(Movie movie) {
@@ -185,6 +211,33 @@ public class DecisionMakerModule extends UserModule {
         return false;
     }
 
+    public boolean approveUsername(String username) {
+        if (username == null || username.length() < 3)
+            return false;
+
+        String sql = "SELECT * FROM user WHERE username=?";
+
+        try {
+
+            stmt = conn.prepareStatement(sql);
+            stmt.setString(1, username);
+
+            ResultSet rs = stmt.executeQuery();
+            if (rs.first())
+                return false;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return true;
+    }
+
+    public boolean approvePassword(String password) {
+        if (password == null || password.length() < 6)
+            return false;
+        return true;
+    }
 
     public static void main(String[] args) {
 
