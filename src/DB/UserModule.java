@@ -133,6 +133,7 @@ public class UserModule {
      * @return list of screenings
      */
     public List<Screening> getSchedule() {
+        // FIXME: Shorten method by using extracted methods for movie, theater and seat reservations
         List<Screening> screenings = new ArrayList<>();
 
         java.util.Date dtToday = new java.util.Date();
@@ -234,7 +235,6 @@ public class UserModule {
                 "WHERE theater.ID=?";
 
         try {
-
             stmt = conn.prepareStatement(sql);
 
             stmt.setInt(1, ID);
@@ -269,7 +269,6 @@ public class UserModule {
                 "WHERE seat_reservation.screening_id = ?";
 
         try {
-
             stmt = conn.prepareStatement(sql);
 
             stmt.setInt(1, screening_id);
@@ -303,11 +302,9 @@ public class UserModule {
                 "WHERE theater.ID = ?";
 
         try {
-
             stmt = conn.prepareStatement(sql);
 
             stmt.setInt(1, theaterID);
-
 
             ResultSet rs = stmt.executeQuery();
 
@@ -326,9 +323,66 @@ public class UserModule {
         return seats;
     }
 
-    public boolean addCustomer(Customer customer){
+    public boolean addCustomer(Customer customer) {
+
+        String sql = "INSERT INTO customer (email, firstname, phonenumber, debitcard) VALUES(?, ?, ?, ?)";
+
+        try {
+            stmt = conn.prepareStatement(sql);
+
+            stmt.setString(1, customer.getEmail());
+            stmt.setString(2, customer.getFirstname());
+            stmt.setString(3, customer.getPhonenumber());
+            stmt.setString(4, customer.getDebitcard());
+
+            return stmt.executeUpdate() == 1;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         return false;
     }
+
+    public boolean deleteCustomer(Customer customer) {
+
+        String sql = "DELETE FROM customer WHERE ID=?";
+
+        try {
+            stmt = conn.prepareStatement(sql);
+
+            stmt.setInt(1, customer.getID());
+
+            return stmt.executeUpdate() == 1;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    public boolean updateCustomer(Customer customer) {
+
+        String sql = "UPDATE customer SET email=?, firstname=?, phonenumber=?, debitcard=? WHERE ID=?";
+
+        try {
+            stmt = conn.prepareStatement(sql);
+
+            stmt.setString(1, customer.getEmail());
+            stmt.setString(2, customer.getFirstname());
+            stmt.setString(3, customer.getPhonenumber());
+            stmt.setString(4, customer.getDebitcard());
+            stmt.setInt(5, customer.getID());
+
+            return stmt.executeUpdate() == 1;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
 
     public static void main(String[] args) {
         UserModule userModule = new UserModule();
