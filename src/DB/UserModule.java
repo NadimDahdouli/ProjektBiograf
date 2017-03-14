@@ -368,6 +368,8 @@ public class UserModule {
     }
 
     public boolean updateCustomer(Customer customer) {
+        if (!approveCustomerData(customer))
+            return false;
 
         String sql = "UPDATE customer SET email=?, firstname=?, phonenumber=?, debitcard=? WHERE ID=?";
 
@@ -419,6 +421,20 @@ public class UserModule {
         Matcher matcher = pattern.matcher(customer.getEmail());
         if (!matcher.matches())
             return false;
+
+        String sql = "SELECT * FROM customer WHERE email=?";
+
+        try {
+            stmt = conn.prepareStatement(sql);
+
+            stmt.setString(1, customer.getEmail());
+
+            ResultSet rs = stmt.executeQuery();
+            if (rs.first())
+                return false;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         if (customer.getFirstname() == null || customer.getFirstname().length() < 2)
             return false;
