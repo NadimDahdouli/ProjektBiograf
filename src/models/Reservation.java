@@ -48,4 +48,14 @@ public class Reservation {
     public void setCustomer_id(int customer_id) {
         this.customer_id = customer_id;
     }
+
+    @Override
+    public String toString() {
+        return "Reservation{" +
+                "ID=" + ID +
+                ", paid=" + paid +
+                ", screening_id=" + screening_id +
+                ", customer_id=" + customer_id +
+                '}';
+    }
 }
