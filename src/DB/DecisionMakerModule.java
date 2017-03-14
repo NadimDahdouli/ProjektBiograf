@@ -3,8 +3,10 @@ package db;
 import models.Movie;
 import models.Screening;
 import models.User;
+import org.omg.CORBA.INTERNAL;
 
 import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.List;
 
 /**
@@ -202,6 +204,51 @@ public class DecisionMakerModule extends UserModule {
         return false;
     }
 
+    public void addTheater(String name, int seats) {
+        String sql = "INSERT INTO theater(name, seats) VALUES(?, ?)";
+
+        try {
+            stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+
+            stmt.setString(1, name);
+            stmt.setInt(2, seats);
+
+            stmt.executeUpdate();
+
+            ResultSet rs = stmt.getGeneratedKeys();
+
+            if (!rs.first())
+                return;
+
+            int theaterID = rs.getInt(1);
+
+            sql = "INSERT INTO seat(row, number) VALUES(?, ?)";
+            stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            for (int i = 0; i < seats; i++) {
+                stmt.setInt(1, (i / 20) + 1);
+                stmt.setInt(2, (i % 20) + 1);
+
+                stmt.addBatch();
+            }
+
+            stmt.executeBatch();
+
+            rs = stmt.getGeneratedKeys();
+            sql = "INSERT INTO theater_seats(theater_id, seat_id) VALUES(?, ?)";
+            stmt = conn.prepareStatement(sql);
+            while (rs.next()) {
+                stmt.setInt(1, theaterID);
+                stmt.setInt(2, rs.getInt(1));
+
+                stmt.addBatch();
+            }
+
+            stmt.executeBatch();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     public boolean approveUsername(String username) {
         if (username == null || username.length() < 3)
             return false;
@@ -235,7 +282,6 @@ public class DecisionMakerModule extends UserModule {
         DecisionMakerModule makerModule = new DecisionMakerModule();
 
         //System.out.println(makerModule.addMovie(new Movie("Batman 2", 100, 120, 16)));
-
 
     }
 
