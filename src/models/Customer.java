@@ -27,6 +27,10 @@ public class Customer {
         return ID;
     }
 
+    public void setID(int ID) {
+        this.ID = ID;
+    }
+
     public String getEmail() {
         return email;
     }
