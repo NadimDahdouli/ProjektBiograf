@@ -232,6 +232,31 @@ public class DecisionMakerModule extends UserModule {
         return false;
     }
 
+    public boolean deleteScreenings(List<Screening> screenings) {
+
+        try {
+            String sql = "DELETE FROM screening WHERE ID=?";
+            stmt = conn.prepareStatement(sql);
+
+            screenings.forEach(screening -> {
+                try {
+                    stmt.setInt(1, screening.getID());
+
+                    stmt.addBatch();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+
+            return stmt.executeBatch().length >= 0;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
     public void addTheater(String name, int seats) {
         String sql = "INSERT INTO theater(name, seats) VALUES(?, ?)";
 
