@@ -6,6 +6,7 @@ import models.User;
 import org.omg.CORBA.INTERNAL;
 
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
 
@@ -192,10 +193,37 @@ public class DecisionMakerModule extends UserModule {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-
             });
 
-            stmt.executeBatch();
+            return stmt.executeBatch().length >= 0;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    public boolean editScreenings(List<Screening> screenings) {
+
+        try {
+            String sql = "UPDATE screening SET timestamp=?, theater_id=?, movie_id=? WHERE ID=?";
+            stmt = conn.prepareStatement(sql);
+
+            screenings.forEach(screening -> {
+                try {
+                    stmt.setTimestamp(1, screening.getTimestamp());
+                    stmt.setInt(2, screening.getTheater().getID());
+                    stmt.setInt(3, screening.getMovie().getID());
+                    stmt.setInt(4, screening.getID());
+
+                    stmt.addBatch();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+
+            return stmt.executeBatch().length >= 0;
 
         } catch (Exception e) {
             e.printStackTrace();

@@ -32,7 +32,6 @@ public class Screening {
     }
 
     public Screening(Timestamp timestamp, Movie movie, Theater theater, List<Seat> seatReservations) {
-        this.ID = ID;
         this.timestamp = timestamp;
         this.movie = movie;
         this.theater = theater;
@@ -41,6 +40,10 @@ public class Screening {
             this.availableSeats = theater.getNbrSeats() - seatReservations.size();
         else
             this.availableSeats = theater.getNbrSeats();
+    }
+
+    public int getID() {
+        return ID;
     }
 
     public Timestamp getTimestamp() {
