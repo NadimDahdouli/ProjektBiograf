@@ -1,11 +1,12 @@
 import db.ConnectionHandler;
 import db.DecisionMakerModule;
 import db.UserModule;
-import models.Customer;
-import models.Seat;
-import models.User;
+import models.*;
 import org.junit.Test;
 
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -84,6 +85,22 @@ public class DBTests {
         um.deleteReservation(id);
 
         return success;
+    }
+
+    boolean addScreening(Timestamp ts, Movie movie, Theater theater) {
+        DecisionMakerModule dmm = new DecisionMakerModule();
+
+        List<Screening> screenings = new LinkedList<>();
+        screenings.add(new Screening(ts, movie, theater, null));
+
+        return dmm.addScreenings(screenings);
+    }
+
+    boolean addMovie(String title, int price, int runtime, int agelimit) {
+        DecisionMakerModule dmm = new DecisionMakerModule();
+        Movie movie = new Movie(title, price, runtime, agelimit);
+
+        return dmm.addMovie(movie) > 0;
     }
 
     @Test
@@ -299,52 +316,50 @@ public class DBTests {
 
     @Test
     public void testAddMovieScheduleEmptyTitle() {
-        assertTrue(false);
-    }
-
-    @Test
-    public void testAddMovieScheduleInvalidTitle() {
-        assertTrue(false);
+        assertFalse(addMovie(null, 120, 120, 15));
+        assertFalse(addMovie("", 120, 120, 15));
     }
 
     @Test
     public void testAddMovieScheduleInvalidPrice() {
-        assertTrue(false);
+        assertFalse(addMovie("TestVideo", -1, 120, 15));
     }
 
     @Test
     public void testAddMovieScheduleInvalidLength() {
-        assertTrue(false);
-    }
-
-    @Test
-    public void testAddMovieScheduleEmptyAgeLimit() {
-        assertTrue(false);
+        assertFalse(addMovie("TestVideo", 120, -1, 15));
     }
 
     @Test
     public void testAddMovieScheduleInvalidAgeLimit() {
-        assertTrue(false);
+        assertFalse(addMovie("TestVideo", 120, 120, -1));
+        assertFalse(addMovie("TestVideo", 120, 120, 6));
+        assertFalse(addMovie("TestVideo", 120, 120, 30));
     }
 
     @Test
     public void testAddMovieScheduleEmptyTime() {
-        assertTrue(false);
+        DecisionMakerModule dmm = new DecisionMakerModule();
+        assertFalse(addScreening(null, dmm.getMovie(1), dmm.getTheater(14)));
     }
 
     @Test
     public void testAddMovieScheduleInvalidTime() {
-        assertTrue(false);
+        DecisionMakerModule dmm = new DecisionMakerModule();
+        assertFalse(addScreening(new Timestamp(new Date().getTime() - 3600 * 48), dmm.getMovie(1), dmm.getTheater(14)));
+        assertFalse(addScreening(new Timestamp(new Date().getTime()), dmm.getMovie(1), dmm.getTheater(14)));
     }
 
     @Test
     public void testAddMovieScheduleInvalidRoomID() {
-        assertTrue(false);
+        DecisionMakerModule dmm = new DecisionMakerModule();
+        assertFalse(addScreening(new Timestamp(new Date().getTime() + 3600 * 48), dmm.getMovie(1), dmm.getTheater(5)));
     }
 
     @Test
     public void testAddMovieScheduleValidData() {
-        assertTrue(false);
+        DecisionMakerModule dmm = new DecisionMakerModule();
+        assertTrue(addScreening(new Timestamp(new Date().getTime() + 3600 * 48), dmm.getMovie(1), dmm.getTheater(14)));
     }
 
     @Test
