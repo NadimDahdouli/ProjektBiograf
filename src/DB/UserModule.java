@@ -93,7 +93,22 @@ public class UserModule {
         }
 
         return movie;
+    }
 
+    public boolean getMovie(String title) {
+        try {
+            String sql = "SELECT * FROM movie WHERE title=?";
+            stmt = conn.prepareStatement(sql);
+
+            stmt.setString(1, title);
+
+            return stmt.executeQuery().first();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return false;
     }
 
     public List<Screening> getScreenings(Movie movie) {
@@ -231,7 +246,7 @@ public class UserModule {
     }
 
 
-    private List<Seat> getSeatsForScreening(int screening_id) {
+    public List<Seat> getSeatsForScreening(int screening_id) {
         List<Seat> seats = new ArrayList<>();
 
         String sql = "SELECT " +
@@ -423,6 +438,27 @@ public class UserModule {
                 return false;
 
         return true;
+    }
+
+    public Reservation searchReservation(int id) {
+        String sql = "SELECT * FROM reservation WHERE ID=?";
+
+        try {
+            stmt = conn.prepareStatement(sql);
+
+            stmt.setInt(1, id);
+
+            ResultSet rs = stmt.executeQuery();
+            if (rs.first())
+                return new Reservation(rs.getInt("ID"),
+                        rs.getBoolean("paid"),
+                        rs.getInt("screening_id"),
+                        rs.getInt("customer_id"));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
     }
 
     public static void main(String[] args) {

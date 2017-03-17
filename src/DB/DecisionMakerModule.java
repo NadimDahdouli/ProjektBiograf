@@ -2,12 +2,15 @@ package db;
 
 import models.Movie;
 import models.Screening;
+import models.Theater;
 import models.User;
 import org.omg.CORBA.INTERNAL;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -175,8 +178,10 @@ public class DecisionMakerModule extends UserModule {
         return false;
     }
 
-
     public boolean addScreenings(List<Screening> screenings) {
+        for (Screening screening : screenings)
+            if (!approveScreeningData(screening))
+                return false;
 
         try {
             String sql = "INSERT INTO screening (timestamp, theater_id, movie_id) VALUES(?, ?, ?)";
@@ -257,6 +262,24 @@ public class DecisionMakerModule extends UserModule {
         return false;
     }
 
+    public Screening getScreening(int id) {
+        try {
+            String sql = "SELECT * FROM reservation WHERE ID=?";
+
+            stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, id);
+
+            ResultSet rs = stmt.executeQuery();
+
+            if(rs.first())
+                return new Screening(rs.getInt("ID"), rs.getTimestamp("timestamp"), getMovie( rs.getInt("movie_id")), getTheater(rs.getInt("theater_id")), null);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
     public void addTheater(String name, int seats) {
         String sql = "INSERT INTO theater(name, seats) VALUES(?, ?)";
 
@@ -302,6 +325,41 @@ public class DecisionMakerModule extends UserModule {
         }
     }
 
+    public boolean getTheater(String name) {
+        try {
+            String sql = "SELECT * FROM theater WHERE name=?";
+            stmt = conn.prepareStatement(sql);
+
+            stmt.setString(1, name);
+
+            return stmt.executeQuery().first();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    public Theater getTheater(int id) {
+        try {
+            String sql = "SELECT * FROM theater WHERE ID=?";
+            stmt = conn.prepareStatement(sql);
+
+            stmt.setInt(1, id);
+
+            ResultSet rs = stmt.executeQuery();
+
+            if(rs.first())
+                return new Theater(rs.getInt("ID"), rs.getString("name"), rs.getInt("seats"), null);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
     public boolean approveUsername(String username) {
         if (username == null || username.length() < 3)
             return false;
@@ -327,6 +385,19 @@ public class DecisionMakerModule extends UserModule {
     public boolean approvePassword(String password) {
         if (password == null || password.length() < 6)
             return false;
+        return true;
+    }
+
+    public boolean approveScreeningData(Screening screening) {
+        if (!getMovie(screening.getMovie().getTitle()))
+            return false;
+
+        if (!getTheater(screening.getTheater().getName()))
+            return false;
+
+        if (screening.getTimestamp().before(new Timestamp(new Date().getTime())))
+            return false;
+
         return true;
     }
 
