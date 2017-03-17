@@ -36,9 +36,9 @@ public class Screening {
         this.movie = movie;
         this.theater = theater;
         this.seatReservations = seatReservations;
-        if (seatReservations != null)
+        if (theater != null && seatReservations != null)
             this.availableSeats = theater.getNbrSeats() - seatReservations.size();
-        else
+        else if (theater != null)
             this.availableSeats = theater.getNbrSeats();
     }
 

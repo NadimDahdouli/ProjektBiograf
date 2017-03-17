@@ -93,7 +93,22 @@ public class UserModule {
         }
 
         return movie;
+    }
 
+    public boolean getMovie(String title) {
+        try {
+            String sql = "SELECT * FROM movie WHERE title=?";
+            stmt = conn.prepareStatement(sql);
+
+            stmt.setString(1, title);
+
+            return stmt.executeQuery().first();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return false;
     }
 
     public List<Screening> getScreenings(Movie movie) {
@@ -230,12 +245,11 @@ public class UserModule {
         return theater;
     }
 
-
-    private List<Seat> getSeatsForScreening(int screening_id) {
+    public List<Seat> getSeatsForScreening(int screening_id) {
         List<Seat> seats = new ArrayList<>();
 
         String sql = "SELECT " +
-                "seat.ID, seat.row, seat.number " +
+                "seat.* " +
                 "FROM seat_reservation " +
                 "JOIN seat ON seat_reservation.seat_id = seat.ID " +
                 "WHERE seat_reservation.screening_id = ?";
@@ -244,6 +258,61 @@ public class UserModule {
             stmt = conn.prepareStatement(sql);
 
             stmt.setInt(1, screening_id);
+
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                seats.add(new Seat(
+                        rs.getInt("ID"),
+                        rs.getInt("row"),
+                        rs.getInt("number")
+                ));
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return seats;
+    }
+
+    public List<Seat> getAvailableSeatsForScreening(int screening_id) {
+        List<Seat> seats = new ArrayList<>();
+
+        String sql = "SELECT * FROM seat WHERE ID IN (SELECT seat_id FROM theater_seats JOIN screening ON theater_seats.theater_id=screening.theater_id JOIN seat WHERE screening.ID=? AND seat_id NOT IN (SELECT seat_id FROM seat_reservation JOIN screening ON seat_reservation.screening_id=screening.ID WHERE screening.ID=?))";
+
+        try {
+            stmt = conn.prepareStatement(sql);
+
+            stmt.setInt(1, screening_id);
+            stmt.setInt(2, screening_id);
+
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                seats.add(new Seat(
+                        rs.getInt("ID"),
+                        rs.getInt("row"),
+                        rs.getInt("number")
+                ));
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return seats;
+    }
+
+    public List<Seat> getReservationSeats(int reservationID) {
+        List<Seat> seats = new ArrayList<>();
+
+        String sql = "SELECT * FROM seat JOIN seat_reservation ON seat.ID=seat_reservation.seat_id WHERE seat_reservation.reservation_id=?";
+
+        try {
+            stmt = conn.prepareStatement(sql);
+
+            stmt.setInt(1, reservationID);
 
             ResultSet rs = stmt.executeQuery();
 
@@ -381,6 +450,28 @@ public class UserModule {
         return null;
     }
 
+    public Customer getCustomer(int id) {
+        String sql = "SELECT * FROM customer WHERE ID=?";
+
+        try {
+            stmt = conn.prepareStatement(sql);
+
+            stmt.setInt(1, id);
+
+            ResultSet rs = stmt.executeQuery();
+            if (rs.first())
+                return new Customer(rs.getInt("ID"),
+                        rs.getString("email"),
+                        rs.getString("firstname"),
+                        rs.getString("phonenumber"),
+                        rs.getString("debitcard"));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
     public boolean approveCustomerData(Customer customer) {
         if (customer.getEmail() == null)
             return false;
@@ -411,23 +502,196 @@ public class UserModule {
         if (customer.getPhonenumber() == null || customer.getPhonenumber().length() < 5)
             return false;
 
-        if (customer.getDebitcard() == null || customer.getDebitcard().length() < 5)
-            return false;
-
         for (char c : customer.getPhonenumber().toCharArray())
             if (c < '0' || c > '9')
                 return false;
 
-        for (char c : customer.getDebitcard().toCharArray())
-            if (c < '0' || c > '9')
-                return false;
+        if (customer.getDebitcard() != null || customer.getDebitcard().length() > 0){
+            for (char c : customer.getDebitcard().toCharArray())
+                if (c < '0' || c > '9')
+                    return false;
+        }
 
         return true;
     }
 
-    public static void main(String[] args) {
-        UserModule userModule = new UserModule();
+    public Reservation searchReservation(int id) {
+        String sql = "SELECT * FROM reservation WHERE ID=?";
 
-        userModule.getSchedule();
+        try {
+            stmt = conn.prepareStatement(sql);
+
+            stmt.setInt(1, id);
+
+            ResultSet rs = stmt.executeQuery();
+            if (rs.first())
+                return new Reservation(rs.getInt("ID"),
+                        rs.getBoolean("paid"),
+                        rs.getInt("screening_id"),
+                        rs.getInt("customer_id"));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    public int createReservation(int screeningID, int customerID, List<Seat> seats) {
+        try {
+            String sql = "SELECT * FROM screening WHERE ID=?";
+            stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, screeningID);
+            ResultSet rs = stmt.executeQuery();
+            if (!rs.first())
+                return -1;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        if (getCustomer(customerID) == null)
+            return -1;
+
+        if (seats.size() == 0)
+            return -1;
+
+        List<Seat> availableSeats = getAvailableSeatsForScreening(screeningID);
+
+        if (availableSeats.size() < seats.size())
+            return -1;
+
+        for (Seat seat : seats) {
+            if (!availableSeats.contains(seat))
+                return -1;
+        }
+
+        try {
+            String sql = "INSERT INTO reservation (screening_id, customer_id) VALUES (?, ?)";
+
+            stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            stmt.setInt(1, screeningID);
+            stmt.setInt(2, customerID);
+
+            stmt.executeUpdate();
+
+            ResultSet rs = stmt.getGeneratedKeys();
+            if (rs.first()) {
+                int reservationID = rs.getInt(1);
+
+                sql = "INSERT INTO seat_reservation (seat_id, reservation_id, screening_id) VALUES (?, ?, ?)";
+
+                stmt = conn.prepareStatement(sql);
+
+                for (Seat seat : seats) {
+                    stmt.setInt(1, seat.getID());
+                    stmt.setInt(2, reservationID);
+                    stmt.setInt(3, screeningID);
+
+                    stmt.addBatch();
+                }
+
+                if(stmt.executeBatch().length == seats.size())
+                    return reservationID;
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return -1;
+    }
+
+    public boolean deleteReservation(int reservationID) {
+        if (searchReservation(reservationID) == null)
+            return false;
+
+        try {
+            String sql = "DELETE FROM reservation WHERE ID=?";
+
+            stmt = conn.prepareStatement(sql);
+
+            stmt.setInt(1, reservationID);
+
+            if (stmt.executeUpdate() == 1) {
+                sql = "DELETE FROM seat_reservation WHERE reservation_id=?";
+
+                stmt = conn.prepareStatement(sql);
+                stmt.setInt(1, reservationID);
+                stmt.execute();
+
+                return true;
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    public boolean changeReservation(int reservationID, int screeningID, int customerID, List<Seat> seats) {
+        try {
+            String sql = "SELECT * FROM screening WHERE ID=?";
+            stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, screeningID);
+            ResultSet rs = stmt.executeQuery();
+            if (!rs.first())
+                return false;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        if (getCustomer(customerID) == null)
+            return false;
+
+        if (seats.size() == 0)
+            return false;
+
+        if (!deleteReservation(reservationID))
+            return false;
+
+        List<Seat> availableSeats = getAvailableSeatsForScreening(screeningID);
+
+        if (availableSeats.size() < seats.size())
+            return false;
+
+        for (Seat seat : seats) {
+            if (!availableSeats.contains(seat))
+                return false;
+        }
+
+        try {
+            String sql = "INSERT INTO reservation (ID, screening_id, customer_id) VALUES (?, ?, ?)";
+
+            stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, reservationID);
+            stmt.setInt(2, screeningID);
+            stmt.setInt(3, customerID);
+
+            stmt.executeUpdate();
+
+            sql = "INSERT INTO seat_reservation (seat_id, reservation_id, screening_id) VALUES (?, ?, ?)";
+
+            stmt = conn.prepareStatement(sql);
+
+            for (Seat seat : seats) {
+                stmt.setInt(1, seat.getID());
+                stmt.setInt(2, reservationID);
+                stmt.setInt(3, screeningID);
+
+                stmt.addBatch();
+            }
+
+            if(stmt.executeBatch().length == seats.size())
+                return true;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    public static void main(String[] args) {
+        UserModule um = new UserModule();
     }
 }
