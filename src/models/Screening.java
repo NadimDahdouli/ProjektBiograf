@@ -58,10 +58,6 @@ public class Screening {
         return theater;
     }
 
-    public static Screening createScreening(Timestamp timestamp, String title, int price) {
-        return null;
-    }
-
     @Override
     public String toString() {
         return "Screening{" +

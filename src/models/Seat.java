@@ -35,6 +35,14 @@ public class Seat {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof Seat))
+            return false;
+
+        return getID() == ((Seat)o).getID();
+    }
+
+    @Override
     public String toString() {
         return "Seat{" +
                 "ID=" + ID +

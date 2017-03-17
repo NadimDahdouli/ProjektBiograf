@@ -2,7 +2,7 @@ import db.ConnectionHandler;
 import db.DecisionMakerModule;
 import db.UserModule;
 import models.Customer;
-import models.Screening;
+import models.Seat;
 import models.User;
 import org.junit.Test;
 
@@ -54,6 +54,34 @@ public class DBTests {
             assertTrue(um.deleteCustomer(customer));
             assertNull(um.getCustomer(customer.getEmail()));
         }
+
+        return success;
+    }
+
+    int createDummyReservation(int screening_id, int customer_id, int seats) {
+        UserModule um = new UserModule();
+        List<Seat> list = um.getAvailableSeatsForScreening(2);
+        List<Seat> list2 = new LinkedList<>();
+
+        for (int i = 0; i < (seats > list.size() ? list.size() : seats); i++)
+            list2.add(list.get(i));
+
+        return um.createReservation(screening_id, customer_id, list2);
+    }
+
+    boolean changeReservation(int screening_id, int customer_id, int seats) {
+        UserModule um = new UserModule();
+
+        List<Seat> list = um.getAvailableSeatsForScreening(2);
+        List<Seat> list2 = new LinkedList<>();
+
+        for (int i = 0; i < (seats > list.size() ? list.size() : seats); i++)
+            list2.add(list.get(i));
+
+        int id = um.createReservation(2, 2, list2);
+        boolean success = um.changeReservation(id, screening_id, customer_id, list2);
+
+        um.deleteReservation(id);
 
         return success;
     }
@@ -114,43 +142,41 @@ public class DBTests {
     }
 
     @Test
-    public void testCreateReservationEmpty() {
-        assertTrue(false);
-    }
-
-    @Test
-    public void testCreateReservationEmptyShowID() {
-        assertTrue(false);
-    }
-
-    @Test
-    public void testCreateReservationEmptyCustomerID() {
-        assertTrue(false);
-    }
-
-    @Test
     public void testCreateReservationEmptySeatID() {
-        assertTrue(false);
+        UserModule um = new UserModule();
+        List<Seat> list = new LinkedList<>();
+        list.add(new Seat(-1, 0, 0));
+
+        int id = um.createReservation(2, 2, list);
+        assertTrue(id < 0);
     }
 
     @Test
     public void testCreateReservationInvalidShowID() {
-        assertTrue(false);
+        int id = createDummyReservation(-1, 2, 0);
+        assertTrue(id < 0);
     }
 
     @Test
     public void testCreateReservationInvalidCustomerID() {
-        assertTrue(false);
+        int id = createDummyReservation(2, -1, 0);
+        assertTrue(id < 0);
     }
 
     @Test
     public void testCreateReservationInvalidSeat() {
-        assertTrue(false);
+        int id = createDummyReservation(2, 2, 0);
+        assertTrue(id < 0);
     }
 
     @Test
     public void testCreateReservationValidData() {
-        assertTrue(false);
+        int id = createDummyReservation(2, 2, 5);
+        assertTrue(id > 0);
+
+        // Clean up db
+        UserModule um = new UserModule();
+        assertTrue(um.deleteReservation(id));
     }
 
     @Test
@@ -192,12 +218,6 @@ public class DBTests {
     }
 
     @Test
-    public void testCreateCustomerEmptyCreditcardNumber() {
-        assertFalse(registerCustomer("valid@email.here", "name", "123123123123", null));
-        assertFalse(registerCustomer("valid@email.here", "name", "123123123123", ""));
-    }
-
-    @Test
     public void testCreateCustomerValidData() {
         assertTrue(registerCustomer("valid@email.here", "name", "123123123123", "7514267389123"));
 
@@ -210,22 +230,18 @@ public class DBTests {
 
     @Test
     public void testRemoveReservationInvalidReservationID() {
-        assertFalse(true);
-    }
-
-    @Test
-    public void testRemoveReservationInvalidUserID() {
-        assertTrue(false);
-    }
-
-    @Test
-    public void testRemoveReservationInvalidSeatID() {
-        assertTrue(false);
+        UserModule um = new UserModule();
+        assertFalse(um.deleteReservation(-1));
     }
 
     @Test
     public void testRemoveReservationValidData() {
-        assertTrue(false);
+        UserModule um = new UserModule();
+        int id = createDummyReservation(2, 2, 5);
+        assertTrue(id > 0);
+        assertNotNull(um.searchReservation(id));
+        um.deleteReservation(id);
+        assertNull(um.searchReservation(id));
     }
 
     @Test
@@ -264,12 +280,6 @@ public class DBTests {
     @Test
     public void testChangeCustomerInvalidCreditcardNumber() {
         assertFalse(changeCustomer("stillvalid@email.here", "validname", "123123123", "asda68asd"));
-    }
-
-    @Test
-    public void testChangeCustomerEmptyCreditcardNumber() {
-        assertFalse(changeCustomer("stillvalid@email.here", "validname", "123123123", null));
-        assertFalse(changeCustomer("stillvalid@email.here", "validname", "123123123", ""));
     }
 
     @Test
@@ -371,48 +381,60 @@ public class DBTests {
     }
 
     @Test
-    public void testCheckReservationInvalidID() {
-        assertTrue(false);
-    }
-
-    @Test
-    public void testCheckReservationValidData() {
-        assertTrue(false);
-    }
-
-    @Test
     public void testChangeReservationInvalidShowID() {
-        assertTrue(false);
-    }
-
-    @Test
-    public void testChangereservationEmptyShowID() {
-        assertTrue(false);
+        assertFalse(changeReservation(-1, 2, 5));
     }
 
     @Test
     public void testChangeReservationInvalidCustomerID() {
-        assertTrue(false);
+        assertFalse(changeReservation(2, -1, 5));
     }
 
     @Test
-    public void testChangeReservationEmptyCustomerID() {
-        assertTrue(false);
-    }
+    public void testChangeReservationInvalidSeats() {
+        UserModule um = new UserModule();
 
-    @Test
-    public void testChangeReservationInvalidSeatID() {
-        assertTrue(false);
-    }
+        List<Seat> list = um.getAvailableSeatsForScreening(2);
+        List<Seat> list2 = new LinkedList<>();
 
-    @Test
-    public void testChangeReservationEmptySeatID() {
-        assertTrue(false);
+        for (int i = 0; i < (5 > list.size() ? list.size() : 5); i++)
+            list2.add(list.get(i));
+
+        int id = um.createReservation(2, 2, list2);
+        assertTrue(um.getReservationSeats(id).size() == 5);
+
+        list2.clear();
+
+        assertFalse(um.changeReservation(id, 2, 2, list2));
+
+        list2.add(new Seat(-1, 0, 0));
+        assertFalse(um.changeReservation(id, 2, 2, list2));
+
+        um.deleteReservation(id);
     }
 
     @Test
     public void testChangeReservationValidData() {
-        assertTrue(false);
+        UserModule um = new UserModule();
+
+        List<Seat> list = um.getAvailableSeatsForScreening(2);
+        List<Seat> list2 = new LinkedList<>();
+
+        for (int i = 0; i < (5 > list.size() ? list.size() : 5); i++)
+            list2.add(list.get(i));
+
+        int id = um.createReservation(2, 2, list2);
+        assertTrue(um.getReservationSeats(id).size() == 5);
+
+        list2.clear();
+        for (int i = 0; i < (10 > list.size() ? list.size() : 10); i++)
+            list2.add(list.get(i));
+
+        um.changeReservation(id, 2, 2, list2);
+
+        assertTrue(um.getReservationSeats(id).size() == 10);
+
+        um.deleteReservation(id);
     }
 
     @Test
